@@ -3,7 +3,7 @@ const { ApolloServer, gql } = require('apollo-server');
 // This is a (sample) collection of books we'll be able to query
 // the GraphQL server for.  A more complete example might fetch
 // from an existing data source like a REST API or database.
-const todos = [
+let todos = [
   {
     title: 'Create a repository for the backend',
     author: 'alediator',
@@ -26,9 +26,13 @@ const typeDefs = gql`
   }
 
   # The "Query" type is the root of all GraphQL queries.
-  # (A "Mutation" type will be covered later on.)
   type Query {
     todos: [Todo]
+  }
+
+  # "Mutation" type
+  type Mutation {
+    addTodo(title: String, author: String): Todo!
   }
 `;
 
@@ -38,6 +42,11 @@ const resolvers = {
   Query: {
     todos: () => todos,
   },
+  Mutation: {
+      addTodo: (parent, args) => {
+        // TODO: this method
+      },
+  }
 };
 
 // In the most basic sense, the ApolloServer can be started
