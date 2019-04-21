@@ -6,3 +6,30 @@ Example server for a meeting based on https://www.apollographql.com/docs/apollo-
 npm install
 node index.js
 ```
+
+## First exercise
+
+Branch: `0_init`
+
+Install the server and run it locally. After that, open the URL: that appears in your console http://localhost:4000 and execute the query to get all todos:
+
+```
+query{
+  todos{
+    id
+    title
+    author
+    description
+  }
+}
+```
+
+Note that you could get only title: 
+
+```
+query{
+  todos{
+    title
+  }
+}
+```
