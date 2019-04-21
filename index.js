@@ -46,6 +46,9 @@ const typeDefs = gql`
   # (A "Mutation" type will be covered later on.)
   type Query {
     todos: [Todo]
+
+    # get a todo by id
+    getTodo(id: ID!): Todo
   }
 `;
 
