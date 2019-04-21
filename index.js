@@ -1,10 +1,14 @@
-const { ApolloServer, gql } = require('apollo-server');
+ const { ApolloServer, gql } = require('apollo-server');
+ const { PubSub } = require('graphql-subscriptions');
+ const pubsub = new PubSub();
+
+ let todosCurrentId = 3;
+ let commentsCurrentId = 300;
+ const TODO_CHANGED_TOPIC_PREFIX = "TODO_";
 
 // This is a (sample) collection of books we'll be able to query
 // the GraphQL server for.  A more complete example might fetch
 // from an existing data source like a REST API or database.
-let todosCurrentId = 3;
-let commentsCurrentId = 300;
 let todos = [
   {
     id: 1,
@@ -54,6 +58,67 @@ function findTodoByAuthor(author){
         }
     });
     return foundTodos;
+}
+
+// add a comment
+async function addComment(args) {
+    let todo = getTodoById(args.todoId);
+    if(todo != null) {
+        console.log("Adding a comment: ", args);
+        let comment = {
+            id: commentsCurrentId,
+        };
+        commentsCurrentId = commentsCurrentId + 100;
+        Object.assign(comment, args);
+        if(!todo.comments){
+            todo.comments = [];
+        }
+        todo.comments.push(comment);
+    } else {
+        console.log("Todo not found: ", args.todoId);
+    }
+    await pubsub.publish(TODO_CHANGED_TOPIC_PREFIX + todo.id, {
+        todoUpdated: todo
+    });
+    return todo;
+}
+
+// update a todo
+async function updateTodo(args){
+    let todo = getTodoById(args.id);
+    if(todo != null) {
+        console.log("Todo updated: ", args);
+        Object.assign(todo, args);
+    } else {
+        console.log("Todo not found: ", args.id);
+    }
+    await pubsub.publish(TODO_CHANGED_TOPIC_PREFIX + todo.id, {
+        todoUpdated: todo
+    });
+    return todo;
+}
+
+// update a comment
+async function updateComment(args) {
+    let todo = getTodoById(args.todoId);
+    if(todo != null) {
+        let comment = null;
+        todos.comments.forEach(element => {
+            if(element.id == args.id){
+                comment = element;
+            }
+        });
+        if(comment != null) {
+            console.log("Updating a comment: ", args);
+            Object.assign(comment, args);
+        } else {
+            console.log("Comment not found: ", args.id);
+        }
+    }
+    await pubsub.publish(TODO_CHANGED_TOPIC_PREFIX + todo.id, {
+        todoUpdated: todo
+    });
+    return todo;
 }
 
 // Type definitions define the "shape" of your data and specify
@@ -108,6 +173,11 @@ const typeDefs = gql`
     # Update an existing comment
     updateComment(todoId: ID!, id: ID!, title: String, author: String, description: String): Todo!
   }
+
+  type Subscription {
+      # Subscribe to all modifications in a todo
+      todoUpdated(id: ID!): Todo
+  }
 `;
 
 // Resolvers define the technique for fetching the types in the
@@ -126,53 +196,15 @@ const resolvers = {
       todos.push(todo);
       return todo;
     },
-    updateTodo: (parent, args) => {
-        let todo = getTodoById(args.id);
-      if(todo != null) {
-          console.log("Todo updated: ", args);
-          Object.assign(todo, args);
-      } else {
-          console.log("Todo not found: ", args.id);
-      }
-      return todo;
+    updateTodo: (parent, args) => updateTodo(args),
+    addComment: (parent, args) => addComment(args),
+    updateComment: (parent, args) => updateComment(args),
+  },
+  Subscription: {
+    todoUpdated: {
+      subscribe: (parent, args) => pubsub.asyncIterator(TODO_CHANGED_TOPIC_PREFIX + args.id),
     },
-    addComment: (parent, args) => {
-        let todo = getTodoById(args.todoId);
-        if(todo != null) {
-            console.log("Adding a comment: ", args);
-            let comment = {
-                id: commentsCurrentId,
-            };
-            commentsCurrentId = commentsCurrentId + 100;
-            Object.assign(comment, args);
-            if(!todo.comments){
-                todo.comments = [];
-            }
-            todo.comments.push(comment);
-        } else {
-            console.log("Todo not found: ", args.todoId);
-        }
-        return todo;
-    },
-    updateComment: (parent, args) => {
-        let todo = getTodoById(args.todoId);
-        if(todo != null) {  
-            let comment = null;
-            todos.comments.forEach(element => {
-                if(element.id == args.id){
-                    comment = element;
-                }
-            });
-            if(comment != null) {
-                console.log("Updating a comment: ", args);
-                Object.assign(comment, args);
-            } else {
-                console.log("Comment not found: ", args.id);
-            }
-        }
-        return todo;
-    },
-  }
+  },
 };
 
 // In the most basic sense, the ApolloServer can be started

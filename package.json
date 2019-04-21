@@ -23,6 +23,7 @@
   "homepage": "https://github.com/alediator/todo-apollo-server#readme",
   "dependencies": {
     "apollo-server": "^2.4.8",
-    "graphql": "^14.2.1"
+    "graphql": "^14.2.1",
+    "graphql-subscriptions": "^1.1.0"
   }
 }
