@@ -4,6 +4,7 @@ const { ApolloServer, gql } = require('apollo-server');
 // the GraphQL server for.  A more complete example might fetch
 // from an existing data source like a REST API or database.
 let todosCurrentId = 3;
+let commentsCurrentId = 300;
 let todos = [
   {
     id: 1,
@@ -33,6 +34,28 @@ let todos = [
   },
 ];
 
+// get a todo by identifier
+function getTodoById(id){
+    let todo = null;
+    todos.forEach(element => {
+        if(element.id == id){
+            todo = element;
+        }
+    });
+    return todo;
+}
+
+// get a todo by author
+function findTodoByAuthor(author){
+    let foundTodos = [];
+    todos.forEach(element => {
+        if(element.author == author){
+            foundTodos.push(element);
+        }
+    });
+    return foundTodos;
+}
+
 // Type definitions define the "shape" of your data and specify
 // which ways the data can be fetched from the GraphQL server.
 const typeDefs = gql`
@@ -58,7 +81,16 @@ const typeDefs = gql`
 
   # The "Query" type is the root of all GraphQL queries.
   type Query {
+
+    # get all todos in the platform
     todos: [Todo]
+
+    # get a todo by id
+    getTodo(id: ID!): Todo
+
+    # get a todo by author
+    findTodoByAuthor(author: String!): [Todo]
+
   }
 
   # "Mutation" type
@@ -69,6 +101,12 @@ const typeDefs = gql`
 
     # Update an existing TODO
     updateTodo(id: ID!, title: String, author: String, description: String): Todo!
+
+    # Add a comment to an existing todo
+    addComment(todoId: ID!, title: String, author: String, description: String): Todo!
+
+    # Update an existing comment
+    updateComment(todoId: ID!, id: ID!, title: String, author: String, description: String): Todo!
   }
 `;
 
@@ -77,30 +115,63 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     todos: () => todos,
+    getTodo: (parent, args) => getTodoById(args.id),
+    findTodoByAuthor: (parent, args) => findTodoByAuthor(args.author),
   },
   Mutation: {
-      addTodo: (parent, args) => {
-        const todo = args;
-        todo.id = todosCurrentId++;
-        console.log("New todo added: ", todo);
-        todos.push(todo);
-        return todo;
-      },
-      updateTodo: (parent, args) => {
-        let todo = null;
-        todos.forEach(element => {
-            if(element.id == args.id){
-                todo = element;
-            }
-        });
+    addTodo: (parent, args) => {
+      const todo = args;
+      todo.id = todosCurrentId++;
+      console.log("New todo added: ", todo);
+      todos.push(todo);
+      return todo;
+    },
+    updateTodo: (parent, args) => {
+        let todo = getTodoById(args.id);
+      if(todo != null) {
+          console.log("Todo updated: ", args);
+          Object.assign(todo, args);
+      } else {
+          console.log("Todo not found: ", args.id);
+      }
+      return todo;
+    },
+    addComment: (parent, args) => {
+        let todo = getTodoById(args.todoId);
         if(todo != null) {
-            console.log("Todo updated: ", args);
-            Object.assign(todo, args);
+            console.log("Adding a comment: ", args);
+            let comment = {
+                id: commentsCurrentId,
+            };
+            commentsCurrentId = commentsCurrentId + 100;
+            Object.assign(comment, args);
+            if(!todo.comments){
+                todo.comments = [];
+            }
+            todo.comments.push(comment);
         } else {
-            console.log("Todo not found: ", args.id)   
+            console.log("Todo not found: ", args.todoId);
         }
         return todo;
-      },
+    },
+    updateComment: (parent, args) => {
+        let todo = getTodoById(args.todoId);
+        if(todo != null) {  
+            let comment = null;
+            todos.comments.forEach(element => {
+                if(element.id == args.id){
+                    comment = element;
+                }
+            });
+            if(comment != null) {
+                console.log("Updating a comment: ", args);
+                Object.assign(comment, args);
+            } else {
+                console.log("Comment not found: ", args.id);
+            }
+        }
+        return todo;
+    },
   }
 };
 
