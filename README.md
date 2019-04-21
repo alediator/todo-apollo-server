@@ -31,3 +31,21 @@ query{
   }
 }
 ```
+
+## Second exercise
+
+Branches: `1_mutation_tip`, `2_mutation`
+
+Implement a mutation to add a new todo to the todo list:
+
+
+```
+mutation{
+  addTodo(title: "Add a mutation", author:"alediator"){
+    title
+    author
+  }
+}
+```
+
+You can use the query we had in the previous exercise.
