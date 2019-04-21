@@ -44,7 +44,10 @@ const resolvers = {
   },
   Mutation: {
       addTodo: (parent, args) => {
-        // TODO: this method
+        const todo = args;
+        console.log("New todo added: ", todo);
+        todos.push(todo);
+        return todo;
       },
   }
 };
