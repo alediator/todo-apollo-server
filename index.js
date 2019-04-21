@@ -8,13 +8,27 @@ let todos = [
     id: 1,
     title: 'Create a repository for the backend',
     author: 'alediator',
-    description: 'We should create a repository to save backend code.'
+    description: 'We should create a repository to save backend code.',
+    comments: [
+        {
+            id: 100,
+            title: 'Why GitHub?',
+            author: 'alediator',
+            description: 'Why did you selected GitHub?',
+        },
+        {
+            id: 200,
+            title: 'Reason why',
+            author: 'alediator',
+            description: 'Because it\'s free and well known.',
+        },
+    ]
   },
   {
     id: 2,
     title: 'Create a repository for the frontend',
     author: 'alediator',
-    description: 'We should create a repository to save frontend code.'
+    description: 'We should create a repository to save frontend code.',
   },
 ];
 
@@ -25,6 +39,16 @@ const typeDefs = gql`
 
   # This "Todo" type can be used in other type declarations.
   type Todo {
+    id: ID!
+    title: String
+    author: String
+    description: String
+    comments: [Comment]
+  }
+
+  # Comment that references a todo entry
+
+  type Comment {
     id: ID!
     title: String
     author: String
