@@ -16,8 +16,10 @@ Install the server and run it locally. After that, open the URL: that appears in
 ```
 query{
   todos{
+    id
     title
     author
+    description
   }
 }
 ```
