@@ -5,12 +5,16 @@ const { ApolloServer, gql } = require('apollo-server');
 // from an existing data source like a REST API or database.
 const todos = [
   {
+    id: 1,
     title: 'Create a repository for the backend',
     author: 'alediator',
+    description: 'We should create a repository to save backend code.'
   },
   {
+    id: 2,
     title: 'Create a repository for the frontend',
     author: 'alediator',
+    description: 'We should create a repository to save frontend code.'
   },
 ];
 
@@ -21,8 +25,10 @@ const typeDefs = gql`
 
   # This "Todo" type can be used in other type declarations.
   type Todo {
+    id: ID!
     title: String
     author: String
+    description: String
   }
 
   # The "Query" type is the root of all GraphQL queries.
