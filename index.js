@@ -18,6 +18,17 @@ let todos = [
   },
 ];
 
+// get a todo by identifier
+function getTodoById(id){
+  let todo = null;
+  todos.forEach(element => {
+      if(element.id == id){
+          todo = element;
+      }
+  });
+  return todo;
+}
+
 // Type definitions define the "shape" of your data and specify
 // which ways the data can be fetched from the GraphQL server.
 const typeDefs = gql`
@@ -47,6 +58,7 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     todos: () => todos,
+    getTodo: (parent, args) => getTodoById(args.id),
   },
   Mutation: {
       addTodo: (parent, args) => {
