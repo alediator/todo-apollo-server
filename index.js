@@ -3,6 +3,7 @@ const { ApolloServer, gql } = require('apollo-server');
 // This is a (sample) collection of books we'll be able to query
 // the GraphQL server for.  A more complete example might fetch
 // from an existing data source like a REST API or database.
+let todosCurrentId = 3;
 let todos = [
   {
     id: 1,
@@ -38,7 +39,12 @@ const typeDefs = gql`
 
   # "Mutation" type
   type Mutation {
-    addTodo(title: String, author: String): Todo!
+
+    # Add a new TODO to the list
+    addTodo(title: String, author: String, description: String): Todo!
+
+    # Update an existing TODO
+    updateTodo(id: ID!, title: String, author: String, description: String): Todo!
   }
 `;
 
@@ -51,8 +57,24 @@ const resolvers = {
   Mutation: {
       addTodo: (parent, args) => {
         const todo = args;
+        todo.id = todosCurrentId++;
         console.log("New todo added: ", todo);
         todos.push(todo);
+        return todo;
+      },
+      updateTodo: (parent, args) => {
+        let todo = null;
+        todos.forEach(element => {
+            if(element.id == args.id){
+                todo = element;
+            }
+        });
+        if(todo != null) {
+            console.log("Todo updated: ", args);
+            Object.assign(todo, args);
+        } else {
+            console.log("Todo not found: ", args.id)   
+        }
         return todo;
       },
   }
