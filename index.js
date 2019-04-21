@@ -45,6 +45,9 @@ const typeDefs = gql`
   # The "Query" type is the root of all GraphQL queries.
   type Query {
     todos: [Todo]
+
+    # get a todo by id
+    getTodo(id: ID!): Todo
   }
 
   # "Mutation" type
