@@ -177,7 +177,7 @@ mutation{
 
 > Solution in branch `5_subscriptions`.
 
-Based on [apollographql/graphql-subscriptions|https://github.com/apollographql/graphql-subscriptions], implement a method to be subscribed to any modification on a todo:
+Based on [apollographql/graphql-subscriptions](https://github.com/apollographql/graphql-subscriptions), implement a method to be subscribed to any modification on a todo:
 
 ```
   type Subscription {
