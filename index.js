@@ -158,11 +158,13 @@ const resolvers = {
         let todo = getTodoById(args.todoId);
         if(todo != null) {  
             let comment = null;
-            todos.comments.forEach(element => {
+            if(todo.comments != null) {
+              todo.comments.forEach(element => {
                 if(element.id == args.id){
                     comment = element;
                 }
-            });
+              });
+            }
             if(comment != null) {
                 console.log("Updating a comment: ", args);
                 Object.assign(comment, args);
