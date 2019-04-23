@@ -5,6 +5,8 @@
  let todosCurrentId = 3;
  let commentsCurrentId = 300;
  const TODO_CHANGED_TOPIC_PREFIX = "TODO_";
+ const TODO_ADDED = "NEW_TODO";
+ const TODO_REMOVED = "REMOVED_TODO";
 
 // This is a (sample) collection of books we'll be able to query
 // the GraphQL server for.  A more complete example might fetch
@@ -123,6 +125,48 @@ async function updateComment(args) {
     return todo;
 }
 
+// add a new todo
+async function addTodo(args) {
+  const todo = args;
+  todo.id = todosCurrentId++;
+  console.log("New todo added: ", todo);
+  todos.push(todo);
+  await pubsub.publish(TODO_ADDED, {
+      todoAdded: todo
+  });
+  return todo;
+}
+
+// delete a comment
+async function deleteComment(args) {
+    let todo = getTodoById(args.todoId);
+    if(todo != null) {
+      console.log("Deleting a comment: ", args.id);
+      todo.comments = todo.comments.filter(function(element, index, arr) {
+        return (element.id != args.id);
+      });
+    }
+    await pubsub.publish(TODO_CHANGED_TOPIC_PREFIX + todo.id, {
+        todoUpdated: todo
+    });
+    return todo;
+}
+
+// delete a todo
+async function deleteTodo(args) {
+    let todo = getTodoById(args.id);
+    if(todo != null) {
+      console.log("Deleting a todo: ", args.id);
+      todos = todos.filter(function(element, index, arr) {
+        return (element.id != args.id);
+      });
+    }
+    await pubsub.publish(TODO_REMOVED, {
+        todoRemoved: todo
+    });
+    return todo;
+}
+
 // Type definitions define the "shape" of your data and specify
 // which ways the data can be fetched from the GraphQL server.
 const typeDefs = gql`
@@ -174,11 +218,23 @@ const typeDefs = gql`
 
     # Update an existing comment
     updateComment(todoId: ID!, id: ID!, title: String, author: String, description: String): Todo!
+
+    # Delete a comment
+    deleteComment(todoId: ID!, id: ID!): Todo!
+
+    # Delete a todo
+    deleteTodo(id: ID!): Todo!
   }
 
   type Subscription {
       # Subscribe to all modifications in a todo
       todoUpdated(id: ID!): Todo
+
+      # Subscribe to todo addition event
+      todoAdded: Todo
+
+      # Subscribe to todo removed event
+      todoRemoved: Todo
   }
 `;
 
@@ -191,20 +247,22 @@ const resolvers = {
     findTodoByAuthor: (parent, args) => findTodoByAuthor(args.author),
   },
   Mutation: {
-    addTodo: (parent, args) => {
-      const todo = args;
-      todo.id = todosCurrentId++;
-      console.log("New todo added: ", todo);
-      todos.push(todo);
-      return todo;
-    },
+    addTodo: (parent, args) => addTodo(args),
     updateTodo: (parent, args) => updateTodo(args),
     addComment: (parent, args) => addComment(args),
     updateComment: (parent, args) => updateComment(args),
+    deleteComment: (parent, args) => deleteComment(args),
+    deleteTodo: (parent, args) => deleteTodo(args),
   },
   Subscription: {
     todoUpdated: {
       subscribe: (parent, args) => pubsub.asyncIterator(TODO_CHANGED_TOPIC_PREFIX + args.id),
+    },
+    todoAdded: {
+      subscribe: (parent, args) => pubsub.asyncIterator(TODO_ADDED),
+    },
+    todoRemoved: {
+      subscribe: (parent, args) => pubsub.asyncIterator(TODO_REMOVED),
     },
   },
 };
